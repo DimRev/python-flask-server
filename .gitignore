@@ -59,6 +59,12 @@ coverage.xml
 local_settings.py
 db.sqlite3
 
+# Sqlite databases
+*.db
+
+# crawler logs
+crawl/
+
 # Flask stuff:
 instance/
 .webassets-cache
