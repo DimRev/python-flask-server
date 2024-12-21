@@ -1,0 +1,4 @@
+[TYPECHECK]
+ignored-modules=alembic.context,alembic.op
+
+
