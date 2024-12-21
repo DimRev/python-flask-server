@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 
-from app.utils.api_consts import APIError
+from app.utils.api_exceptions import APIError
 from app.api.finances.finance_service import FinanceService
 from app.api.finances.finance_schema import CreateFinanceSchema, UpdateFinanceSchema
 

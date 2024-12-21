@@ -1,84 +1,72 @@
 import os
 import sys
-from flask import jsonify
+from enum import Enum
 from dotenv import load_dotenv
 from app.services.logger_service import LoggerService
-
 
 logger = LoggerService()
 
 
-class APIError(Exception):
-    def __init__(self, response_message, logger_message, status_code=400):
-        self.response_message = response_message
-        self.status_code = status_code
-        logger.error(logger_message)
-
-    def __str__(self):
-        return f"{self.status_code} - {self.response_message}"
-
-    def generate_response(self):
-        return jsonify({"message": self.response_message}), self.status_code
-
-
-class APIWarn(Exception):
-    def __init__(self, response_message, logger_message, status_code=400):
-        self.response_message = response_message
-        self.status_code = status_code
-        logger.warning(logger_message)
-
-    def __str__(self):
-        return f"{self.status_code} - {self.response_message}"
-
-    def generate_response(self):
-        return jsonify({"message": self.response_message}), self.status_code
+class Environment(Enum):
+    DEVELOPMENT = "Development"
+    PRODUCTION = "Production"
 
 
 class APIConfig:
     _instance = None
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(APIConfig, cls).__new__(cls)
-            cls._instance.__init__()
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
     def __init__(self):
+        if getattr(self, "_initialized", False):
+            return
+
+        self._initialized = True
+        self._load_env_file()
+        self._port = self._get_validated_port()
+        self._env = self._get_validated_env()
+
+    def _load_env_file(self):
         env = os.getenv("ENV")
-        if env == "Production":
+        if env == Environment.PRODUCTION.value:
             load_dotenv(".env.prod")
         else:
             load_dotenv(".env.dev")
-        self.port = self._get_validated_port()
-        self.env = self._get_validated_env()
 
     def _get_validated_port(self):
         port_str = os.getenv("FLASK_PORT")
+        if not port_str:
+            self._exit_with_error("FLASK_PORT is missing", "_get_validated_port")
         try:
             port = int(port_str)
             if 1 <= port <= 65535:
                 return port
-
-            logger.error(
-                "Invalid PORT value: must be between 1 and 65535",
-                "INTERNAL/APIConfig",
-                "_get_validated_port",
-            )
         except ValueError:
-            logger.error(
-                "PORT value must be an integer",
-                "INTERNAL/APIConfig",
+            self._exit_with_error(
+                "FLASK_PORT must be an integer between 1 and 65535",
                 "_get_validated_port",
             )
-            sys.exit(1)
 
     def _get_validated_env(self):
         env_str = os.getenv("FLASK_ENV")
-        if env_str in ["Development", "Production"]:
+        if env_str in {e.value for e in Environment}:
             return env_str
-        logger.error(
-            "Invalid ENV value: must be either 'Development' or 'Production'",
-            "INTERNAL/APIConfig",
+        self._exit_with_error(
+            f"FLASK_ENV must be one of {', '.join(e.value for e in Environment)}",
             "_get_validated_env",
         )
+
+    def _exit_with_error(self, message, validator):
+        logger.error(message, route="INTERNAL/APIConfig", func=validator)
         sys.exit(1)
+
+    @property
+    def port(self):
+        return self._port
+
+    @property
+    def env(self):
+        return self._env

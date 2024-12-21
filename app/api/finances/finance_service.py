@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.utils.api_consts import APIError
+from app.utils.api_exceptions import APIError
 from app.api.finances.finance_model import Finance, FinanceHistory
 from app.services.selenium_service import RequestProcessor
 from db.db import Database

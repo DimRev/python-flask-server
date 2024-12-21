@@ -2,7 +2,7 @@ import os
 from flask import Flask, request
 from werkzeug.exceptions import NotFound
 from app.routes.api_routes import api_bp
-from app.utils.api_consts import APIError, APIWarn
+from app.utils.api_exceptions import APIError, APIWarn
 from app.utils.api_consts import APIConfig
 
 api_config = APIConfig()
