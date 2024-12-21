@@ -48,6 +48,8 @@ class APIConfig:
             )
         except ValueError:
             logger.error(
-                "PORT value must be an integer", "_get_validated_port", "APIConfig"
+                "PORT value must be an integer",
+                "INTERNAL/APIConfig",
+                "_get_validated_port",
             )
         sys.exit(1)
