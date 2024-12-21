@@ -78,3 +78,58 @@ To start the server, run the following command:
 ```bash
 python -m app.main
 ```
+
+## Structure
+
+```
+root/
+├── app/
+│   ├── api/
+│   │   │ Holds all the API routes
+│   │   ├── items/
+│   │   │   │ Holds the item in a single bundle.
+│   │   │   ├── item_controller.py
+│   │   │   ├── item_model.py
+│   │   │   ├── item_service.py
+│   │   │   └── item_schema.py
+│   │   ├── finances/
+│   │   │   └──...
+│   │   └──...
+│   │
+│   ├── routes/
+│   │   │ Holds all the different top level routes of the app, /api, /ws etc.
+│   │   ├── api_routes.py
+│   │   └── ...
+│   │
+│   ├── services/
+│   │   │ Holds all the app wide services that don't belong in a single bundle
+│   │   ├── logger_service.py
+│   │   ├── selenium_service.py
+│   │   └── ...
+│   │
+│   ├── utils/
+│   │   │ Holds all the app wide utils that don't belong in a single bundle
+│   │   ├── api_consts.py
+│   │   └── api_utils.py
+│   │
+│   ├── main.py - App entry point
+│   └── __init__.py - App bootstrap
+│
+├── db/
+│   │ Holds the sqlite embedded database
+│   ├── migrations/
+│   │   ├── env.py
+│   │   ├── script.py.mako
+│   │   ├── versions
+│   │   │   ├── e0e9c3c0c7e3_migration.py
+│   │   │   └── ...
+│   │   └── ...
+│   ├── db.py - Singleton class to manage the database connection
+│   └── app.db - Database file
+│
+├── .env
+├── Makefile - Makefile for managing the database migrations
+├── README.md
+├── requirements.txt - Python dependencies
+└── run.sh - Script to run the server
+```

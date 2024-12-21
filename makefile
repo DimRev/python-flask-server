@@ -7,3 +7,7 @@ db-up:
 db-migrate:
 	@read -p "Enter migration name: " migration_name; \
 	alembic revision -m "$$migration_name"
+
+dev:
+	@echo "Running the server in dev mode..."
+	@bash scripts/dev.sh 
