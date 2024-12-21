@@ -11,10 +11,11 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
-
 from app.services.crawler_logger_service import CrawlerLogger
+from app.services.logger_service import LoggerService
 
 crawler_logger = CrawlerLogger("finance_crawler", identifier="finance")
+logger = LoggerService()
 
 
 class SeleniumService:
@@ -59,6 +60,10 @@ class RequestProcessor:
         self.thread = threading.Thread(target=self._process_requests, daemon=True)
 
     def start(self):
+        logger.info(
+            f"Starting crawler process, {self.stock_symbols_queue.qsize()} requests in queue.",
+            route="INTERNAL/RequestProcessor",
+        )
         self.stop_event.clear()
         self.results.clear()  # Clear previous results before starting
         self.thread.start()
@@ -66,6 +71,10 @@ class RequestProcessor:
     def stop(self):
         self.stop_event.set()
         self.thread.join()  # Wait for the processing thread to complete
+        logger.info(
+            f"Stopping crawler process, {len(self.results)} results.",
+            route="INTERNAL/RequestProcessor",
+        )
 
     def add_request(self, symbol):
         self.stock_symbols_queue.put(symbol)

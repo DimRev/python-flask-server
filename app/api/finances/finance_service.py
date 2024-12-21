@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import threading
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -13,6 +14,8 @@ processor = RequestProcessor()
 class FinanceService:
     def __init__(self):
         self.db = Database()
+        self.is_running = False
+        self.lock = threading.Lock()
 
     def get_all_finances_symbols(self):
         try:
@@ -88,7 +91,6 @@ class FinanceService:
     def create_finance_by_symbol(self, symbol):
         try:
             with self.db.session_local() as session:
-
                 finance = session.query(Finance).filter_by(symbol=symbol).first()
                 if finance:
                     raise APIError(
@@ -180,14 +182,33 @@ class FinanceService:
             raise APIError("Failed to create finance history", str(e), 500) from e
 
     def execute_finance_crawl_by_symbols(self):
+        with self.lock:
+            if self.is_running:
+                return {
+                    "message": "Request processor currently running.",
+                }
+
+            self.is_running = True
+
+        thread = threading.Thread(target=self._run_crawl_process)
+        thread.start()
+        return {
+            "message": "Request processor started.",
+        }
+
+    def _run_crawl_process(self):
         try:
             finances = self.get_all_finances_symbols()
+
+            # Add requests to the processor
             for finance in finances:
                 processor.add_request(finance["symbol"])
+
+            # Start processing
             processor.start()
             processor.stop()
 
-            responses = []
+            # Process results
             for result in processor.get_results():
                 matching_finance = next(
                     (
@@ -197,12 +218,24 @@ class FinanceService:
                     ),
                     None,
                 )
-                if matching_finance is not None:
-                    resp = self.create_finance_history(
-                        matching_finance["id"], result["price"], result["timestamp"]
+                if matching_finance:
+                    # Strip "$" sign from the price
+                    current_price = float(result["price"][1:])
+                    self.create_finance_history(
+                        finance_id=matching_finance["id"],
+                        current_price=current_price,
+                        created_at=result["timestamp"],
                     )
-                    responses.append(resp)
-            return responses
 
-        except SQLAlchemyError as e:
-            raise APIError("Failed to execute finance crawl", str(e), 500) from e
+        finally:
+            with self.lock:
+                self.is_running = False
+
+    def is_crawler_running(self):
+        if self.is_running:
+            return {
+                "message": "Request processor currently running",
+            }
+        return {
+            "message": "Request processor is available",
+        }

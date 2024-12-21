@@ -41,7 +41,7 @@ class FinanceHistory(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     finance_id = Column(Integer, ForeignKey("finances.id"), nullable=False)
-    current_price = Column(Integer, nullable=False)
+    current_price = Column(Float, nullable=False)
 
     created_at = Column(
         TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc)
