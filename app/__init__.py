@@ -1,7 +1,7 @@
 from flask import Flask, request
 from werkzeug.exceptions import NotFound
 from app.routes.api_routes import api_bp
-from app.utils.api_consts import APIError
+from app.utils.api_consts import APIError, APIWarn
 
 
 def create_app():
@@ -13,7 +13,7 @@ def create_app():
         # Check if the current request matches the /api prefix
         if request.path.startswith("/api"):
             # Log and return a custom 404 response
-            custom_error = APIError(
+            custom_error = APIWarn(
                 response_message="Resource not found",
                 logger_message=f"404 Not Found: {request.path}",
                 status_code=404,
@@ -25,6 +25,10 @@ def create_app():
 
     @app.errorhandler(APIError)
     def handle_api_error(error):
+        return error.generate_response()
+
+    @app.errorhandler(APIWarn)
+    def handle_api_warn(error):
         return error.generate_response()
 
     return app

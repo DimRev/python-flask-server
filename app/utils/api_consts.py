@@ -22,6 +22,19 @@ class APIError(Exception):
         return jsonify({"message": self.response_message}), self.status_code
 
 
+class APIWarn(Exception):
+    def __init__(self, response_message, logger_message, status_code=400):
+        self.response_message = response_message
+        self.status_code = status_code
+        logger.warning(logger_message)
+
+    def __str__(self):
+        return f"{self.status_code} - {self.response_message}"
+
+    def generate_response(self):
+        return jsonify({"message": self.response_message}), self.status_code
+
+
 class APIConfig:
     _instance = None
 
