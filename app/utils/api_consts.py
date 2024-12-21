@@ -6,7 +6,6 @@ from app.services.logger_service import LoggerService
 
 
 logger = LoggerService()
-load_dotenv()
 
 
 class APIError(Exception):
@@ -45,10 +44,16 @@ class APIConfig:
         return cls._instance
 
     def __init__(self):
+        env = os.getenv("ENV")
+        if env == "Production":
+            load_dotenv(".env.prod")
+        else:
+            load_dotenv(".env.dev")
         self.port = self._get_validated_port()
+        self.env = self._get_validated_env()
 
     def _get_validated_port(self):
-        port_str = os.getenv("PORT", "3000")
+        port_str = os.getenv("FLASK_PORT")
         try:
             port = int(port_str)
             if 1 <= port <= 65535:
@@ -56,8 +61,8 @@ class APIConfig:
 
             logger.error(
                 "Invalid PORT value: must be between 1 and 65535",
+                "INTERNAL/APIConfig",
                 "_get_validated_port",
-                "APIConfig",
             )
         except ValueError:
             logger.error(
@@ -65,4 +70,15 @@ class APIConfig:
                 "INTERNAL/APIConfig",
                 "_get_validated_port",
             )
+            sys.exit(1)
+
+    def _get_validated_env(self):
+        env_str = os.getenv("FLASK_ENV")
+        if env_str in ["Development", "Production"]:
+            return env_str
+        logger.error(
+            "Invalid ENV value: must be either 'Development' or 'Production'",
+            "INTERNAL/APIConfig",
+            "_get_validated_env",
+        )
         sys.exit(1)

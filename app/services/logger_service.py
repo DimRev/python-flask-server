@@ -106,8 +106,8 @@ class LoggerService:
                 func = inspect.stack()[curr_stack_idx].function
 
         # Capture the user's IP and user agent
-        ip = request.remote_addr if request else "Unknown IP"
-        user_agent = request.user_agent.string if request else "Unknown Agent"
+        ip = request.remote_addr if request else "INTERNAL"
+        user_agent = request.user_agent.string if request else "INTERNAL"
 
         # Use 'extra' to pass custom fields to the logger
         extra = {

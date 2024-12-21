@@ -11,7 +11,7 @@ current_time=$(date +"%Y-%m-%d %H:%M:%S")
 python_version=$(python --version 2>&1)
 
 # Get the Flask environment (if set, otherwise defaults to 'development')
-flask_env=${FLASK_ENV:-Development}
+flask_env=${FLASK_ENV:-Production}
 
 # Get the current working directory
 working_dir=$(pwd)
