@@ -5,10 +5,10 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.utils.api_exceptions import APIError
 from app.api.finances.finance_model import Finance, FinanceHistory
-from app.services.selenium_service import RequestProcessor
+from app.services.selenium_service import SeleniumRequestProcessor
 from db.db import Database
 
-processor = RequestProcessor()
+selenium_request_processor = SeleniumRequestProcessor()
 
 
 class FinanceService:
@@ -202,14 +202,14 @@ class FinanceService:
 
             # Add requests to the processor
             for finance in finances:
-                processor.add_request(finance["symbol"])
+                selenium_request_processor.add_request(finance["symbol"])
 
             # Start processing
-            processor.start()
-            processor.stop()
+            selenium_request_processor.start()
+            selenium_request_processor.stop()
 
             # Process results
-            for result in processor.get_results():
+            for result in selenium_request_processor.get_results():
                 matching_finance = next(
                     (
                         finance

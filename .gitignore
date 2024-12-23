@@ -136,3 +136,7 @@ cython_debug/
 
 # VS Code
 .vscode/
+
+# Selenium logs
+selenium_logs/**/*
+drivers/**/*

@@ -28,19 +28,28 @@ class SeleniumService:
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
 
-        chromedriver_path = os.path.expanduser(
-            "~/chromedriver/chromedriver-linux64/chromedriver"
+        # Dynamically determine the project root directory
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        chromedriver_path = os.path.join(
+            project_root, "drivers/chromedriver/chromedriver-linux64/chromedriver"
         )
-        if not os.path.exists(chromedriver_path):
-            crawler_logger.error(
-                f"ChromeDriver not found at {chromedriver_path}",
-                sub_identifier="Default",
-            )
-            raise FileNotFoundError(f"ChromeDriver not found at {chromedriver_path}")
 
-        self.service = Service(
-            executable_path=chromedriver_path, log_path="./chromedriver.log"
-        )
+        if not os.path.exists(chromedriver_path):
+            logger.error(
+                f"ChromeDriver not found at {chromedriver_path}, please run the install.chromedrive.sh script.",
+                route="INTERNAL/SeleniumService",
+                func="__init__",
+            )
+            raise FileNotFoundError(
+                f"ChromeDriver not found at {chromedriver_path}, please run the install.chromedrive.sh script.",
+            )
+
+        # Define the log directory and ensure it exists
+        log_dir = os.path.join(project_root, "selenium_logs")
+        os.makedirs(log_dir, exist_ok=True)
+        log_path = os.path.join(log_dir, "chromedriver.log")
+
+        self.service = Service(executable_path=chromedriver_path, log_path=log_path)
 
         for attempt in range(3):
             try:
@@ -81,7 +90,7 @@ class SeleniumService:
         self.close()
 
 
-class RequestProcessor:
+class SeleniumRequestProcessor:
     def __init__(self):
         self.stock_symbols_queue = queue.Queue()
         self.stop_event = threading.Event()
@@ -95,7 +104,9 @@ class RequestProcessor:
             return
 
         logger.info(
-            f"Starting crawler process with {self.stock_symbols_queue.qsize()} requests."
+            f"Starting crawler process with {self.stock_symbols_queue.qsize()} requests.",
+            route="INTERNAL/SeleniumRequestProcessor",
+            func="start",
         )
         self.stop_event.clear()
         self.results.clear()
@@ -112,7 +123,11 @@ class RequestProcessor:
             if self.thread.is_alive():
                 logger.warning("Crawler process did not shut down cleanly.")
             else:
-                logger.info("Crawler process stopped.")
+                logger.info(
+                    "Crawler process stopped.",
+                    route="INTERNAL/SeleniumRequestProcessor",
+                    func="stop",
+                )
             self.thread = None  # Reset thread after stopping
 
     def add_request(self, symbol):
